@@ -1,4 +1,4 @@
-import { Alova } from '@/utils/http/alova/index';
+import { Alova, api } from '@/utils/http/alova/index';
 export interface ListDate {
   label: string;
   key: string;
@@ -13,10 +13,6 @@ export interface ListDate {
 /**
  * @description: 根据用户id获取用户菜单
  */
-export function adminMenus() {
-  return Alova.Get('/menus');
-}
-
 /**
  * 获取tree菜单列表
  * @param params

@@ -48,14 +48,17 @@ function filter<T = any>(
   return listFilter(tree);
 }
 
+//异步路由加载
 export const useAsyncRouteStore = defineStore({
   id: 'app-async-route',
   state: (): IAsyncRouteState => ({
     menus: [],
+    //普通路由
     routers: constantRouter,
     routersAdded: [],
+    //保活的组件
     keepAliveComponents: [],
-    // Whether the route has been dynamically added
+    // 是否已经添加了动态路由
     isDynamicRouteAdded: false,
   }),
   getters: {
@@ -86,7 +89,9 @@ export const useAsyncRouteStore = defineStore({
       // 设置需要缓存的组件
       this.keepAliveComponents = compNames;
     },
+    //生成路由
     async generateRoutes(data) {
+      console.log(data);
       let accessedRouters;
       const permissionsList = data.permissions ?? [];
       const routeFilter = (route) => {
@@ -95,22 +100,23 @@ export const useAsyncRouteStore = defineStore({
         if (!permissions) return true;
         return permissionsList.some((item) => permissions.includes(item.value));
       };
-      const { permissionMode } = useProjectSetting();
-      if (unref(permissionMode) === 'BACK') {
-        // 动态获取菜单
-        try {
-          accessedRouters = await generateDynamicRoutes();
-        } catch (error) {
-          console.log(error);
-        }
-      } else {
-        try {
-          //过滤账户是否拥有某一个权限，并将菜单从加载列表移除
-          accessedRouters = filter(asyncRoutes, routeFilter);
-        } catch (error) {
-          console.log(error);
-        }
-      }
+      // const { permissionMode } = useProjectSetting();
+      accessedRouters = await generateDynamicRoutes();
+      // if (unref(permissionMode) === 'BACK') {
+      //   // 动态获取菜单
+      //   try {
+          
+      //   } catch (error) {
+      //     console.log(error);
+      //   }
+      // } else {
+      //   try {
+      //     //过滤账户是否拥有某一个权限，并将菜单从加载列表移除
+      //     accessedRouters = filter(asyncRoutes, routeFilter);
+      //   } catch (error) {
+      //     console.log(error);
+      //   }
+      // }
       accessedRouters = accessedRouters.filter(routeFilter);
       this.setRouters(accessedRouters);
       this.setMenus(accessedRouters);

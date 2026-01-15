@@ -10,6 +10,7 @@ import { useGlobSetting } from '@/hooks/setting';
 import { PageEnum } from '@/enums/pageEnum';
 import { ResultEnum } from '@/enums/httpEnum';
 import { isUrl } from '@/utils';
+import { Api } from '@/api';
 
 const { useMock, apiUrl, urlPrefix, loggerMock } = useGlobSetting();
 
@@ -62,13 +63,13 @@ export const Alova = createAlova({
       method.config.headers['token'] = token;
     }
     // 处理 api 请求前缀
-    const isUrlStr = isUrl(method.url as string);
-    if (!isUrlStr && urlPrefix) {
+    // const isUrlStr = isUrl(method.url as string);
+    // if (!isUrlStr && urlPrefix) {
       method.url = `${urlPrefix}${method.url}`;
-    }
-    if (!isUrlStr && apiUrl && isString(apiUrl)) {
-      method.url = `${apiUrl}${method.url}`;
-    }
+    // }
+    // if (!isUrlStr && apiUrl && isString(apiUrl)) {
+    //   method.url = `${apiUrl}${method.url}`;
+    // }
   },
   responded: {
     onSuccess: async (response, method) => {
@@ -79,12 +80,12 @@ export const Alova = createAlova({
         return res;
       }
       // 请根据自身情况修改数据结构
-      const { message, code, result } = res;
-
+      const { message, code, data } = res;
+      console.log(data);
       // 不进行任何处理，直接返回
       // 用于需要直接获取 code、result、 message 这些信息时开启
       if (method.meta?.isTransformResponse === false) {
-        return res.data;
+        return res;
       }
 
       // @ts-ignore
@@ -94,10 +95,10 @@ export const Alova = createAlova({
 
       const LoginPath = PageEnum.BASE_LOGIN;
       if (ResultEnum.SUCCESS === code) {
-        return result;
+        return data;
       }
       // 需要登录
-      if (code === 912) {
+      if (code === 401) {
         Modal?.warning({
           title: '提示',
           content: '登录身份已失效，请重新登录!',
@@ -117,8 +118,17 @@ export const Alova = createAlova({
     },
   },
 });
-
-// 项目，多个不同 api 地址，可导出多个实例
-// export const AlovaTwo = createAlova({
-//   baseURL: 'http://localhost:9001',
-// });
+export const api=new Api(async({uri,method,headers={},body})=>{
+  switch (method) {
+    case 'GET':
+      return Alova.Get(uri, {params:body });
+    case 'POST':
+      return Alova.Post(uri, body, { headers });
+    case 'PUT':
+      return Alova.Put(uri, body, { headers });
+    case 'DELETE':
+      return Alova.Delete(uri, { headers });
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
+});

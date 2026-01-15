@@ -5,6 +5,8 @@ import { ResultEnum } from '@/enums/httpEnum';
 
 import { getUserInfo as getUserInfoApi, login } from '@/api/system/user';
 import { storage } from '@/utils/Storage';
+import { LoginUser } from '@/api/model/static';
+import { api } from '@/utils/http/alova';
 
 export type UserInfoType = {
   // TODO: add your own data
@@ -62,33 +64,30 @@ export const useUserStore = defineStore({
       this.info = info;
     },
     // 登录
-    async login(params: any) {
-      const response = await login(params);
-      const { result, code } = response;
-      if (code === ResultEnum.SUCCESS) {
+    async login(params: LoginUser) {
+      const { token, refreshToken} = await api.systemUserController.Login({ body: params })
         const ex = 7 * 24 * 60 * 60;
-        storage.set(ACCESS_TOKEN, result.token, ex);
-        storage.set(CURRENT_USER, result, ex);
+        storage.set(ACCESS_TOKEN, token, ex);
+        storage.set(CURRENT_USER, token, ex);
         storage.set(IS_SCREENLOCKED, false);
-        this.setToken(result.token);
-        this.setUserInfo(result);
-      }
-      return response;
+        this.setToken(token);
+        // this.setUserInfo(result);
+      return { token, refreshToken};
     },
 
     // 获取用户信息
     async getInfo() {
-      const data = await getUserInfoApi();
-      const { result } = data;
-      if (result.permissions && result.permissions.length) {
-        const permissionsList = result.permissions;
-        this.setPermissions(permissionsList);
-        this.setUserInfo(result);
-      } else {
-        throw new Error('getInfo: permissionsList must be a non-null array !');
-      }
-      this.setAvatar(result.avatar);
-      return result;
+      // const data = await getUserInfoApi();
+      // const { result } = data;
+      // if (result.permissions && result.permissions.length) {
+      //   const permissionsList = result.permissions;
+      //   this.setPermissions(permissionsList);
+      //   this.setUserInfo(result);
+      // } else {
+      //   throw new Error('getInfo: permissionsList must be a non-null array !');
+      // }
+      // this.setAvatar(result.avatar);
+      return {};
     },
 
     // 登出
